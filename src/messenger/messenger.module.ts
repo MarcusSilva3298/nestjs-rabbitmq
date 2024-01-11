@@ -4,14 +4,20 @@ import * as amqp from 'amqplib';
 import { RabbitKeysEnum } from '../shared/enums';
 import { MessagesService } from './rabbit/messages.service';
 import { QueuesService } from './rabbit/queues.service';
+import { ConfigService } from '@nestjs/config';
+import { EnvVariablesEnum } from '../config/configModule/schema';
 
 @Module({})
 export class MessengerModule {
   static readonly channelSubject = new Subject<amqp.Channel>();
 
   static async forRootAsync(): Promise<DynamicModule> {
+    const configService = new ConfigService();
+
     try {
-      const connection = await amqp.connect('amqp://root:root@localhost:5672');
+      const connection = await amqp.connect(
+        configService.get<string>(EnvVariablesEnum.MESSENGER_BROKER_URL),
+      );
 
       const channel = await connection.createChannel();
 
